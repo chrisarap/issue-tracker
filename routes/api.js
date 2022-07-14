@@ -6,12 +6,13 @@ module.exports = function (app) {
   
     .get(function (req, res){
       let project = req.params.project;
-      
+      let {open} = req.query;
+
     })
     
     .post(function (req, res){
       let project = req.params.project;
-      
+
     })
     
     .put(function (req, res){
@@ -23,5 +24,9 @@ module.exports = function (app) {
       let project = req.params.project;
       
     });
-    
+  
+  app.route('/api/issues/apitest')
+    .post((req, res) => {})
+    .put((req, res) => {})
+    .delete((req, res) => {});
 };
