@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 module.exports = function (app) {
 
-  mongoose.connect(process.env.MONGO_URI);
+  mongoose.connect('mongodb://localhost:27017/test');
   const issueSchema = new mongoose.Schema({
      "issue_title": {type: String, required: true},
      "issue_text": {type: String, required: true},
@@ -41,21 +41,48 @@ module.exports = function (app) {
         status_text
       }, (err, data) => {
         if (err) return console.error(err._message);
-        console.log(req.body.error)
+        console.log(req.body)
+        res.json(data);
       });
     })
 
     .put(function (req, res){
       let project = req.params.project;
+      const {issue_title, issue_text, created_on, updated_on, created_by, assigned_to, open, status_text,_id} = req.body;
 
+      Issue.findByIdAndUpdate(_id, {
+        issue_title:issue_title,
+        issue_text:issue_text,
+        created_on:created_on,
+        updated_on:updated_on,
+        created_by:created_by,
+        assigned_to:assigned_to,
+        open: open,
+        status_text: status_text
+      },{
+        new: true,
+        overwrite: false
+      } , (err, data) => {
+        console.log(data)
+        res.json(data);
+      });
     })
 
     .delete(function (req, res){
       let project = req.params.project;
-      let { id } = req.body._id;
-
-      Issue.deleteOne(id, (err, data) => {
-        if (err) return console.error(err);
+      let { _id } = req.body;
+      console.log(_id);
+/*
+      Issue.deleteMany({}, (err, data) => {
+        if (err) return console.log(err);
+        console.log(data);
       });
+
+      */
+      Issue.deleteOne({_id:_id}, (err, data) => {
+        if (err) return console.error(err);
+        console.log(data);
+      });
+
     });
 };
