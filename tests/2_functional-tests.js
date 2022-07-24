@@ -55,10 +55,59 @@ suite('Functional Tests', function() {
       })
       .end((err, res) => {
           assert.equal(res.status, 200, "200 status");
-          assert.ifError(err);
+          assert.equal(res.body.error, 'required field(s) missing');
       })
       done();
   });
 
+  test('view issues on a project', done => {
+    chai
+      .request(server)
+      .get('/api/issues/apitest')
+      .end((err, res) => {
+        assert.equal(res.status, 200);
+        assert.isArray(res.body);
+        assert.property(res.body[0], 'issue_title');
+        assert.property(res.body[0], 'issue_text');
+        assert.property(res.body[0], 'created_by');
+        assert.property(res.body[0], 'assigned_to');
+        assert.property(res.body[0], 'status_text');
+        assert.property(res.body[0], 'open');
+        assert.property(res.body[0], '_id');
+        assert.property(res.body[0], 'created_on');
+        assert.property(res.body[0], 'updated_on');
+      })
+    done();
+  });
+
+  test('view issues on a project with one filter', done => {
+    chai
+      .request(server)
+      .get('/api/issues/apitest')
+      .query({open: true})
+      .end((err, res) => {
+        assert.equal(res.status, 200);
+        assert.isArray(res.body);
+        assert.property(res.body[0], 'open');
+        assert.equal(res.body[0].open, true);
+      })
+    done();
+  });
+
+  test('view issues on a project with multiples filters', done => {
+    chai
+      .request(server)
+      .get('/api/issues/apitest')
+      .query({open: true, project: 'apitest'})
+      .end((err, res) => {
+        assert.equal(res.status, 200);
+        assert.isArray(res.body);
+        assert.property(res.body[0], 'open');
+        assert.property(res.body[0], 'project');
+        assert.equal(res.body[0].open, true);
+        assert.equal(res.body[0].project, 'apitest');
+      })
+    done();
+  });
 
 });

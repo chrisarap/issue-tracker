@@ -75,24 +75,40 @@ module.exports = function (app) {
     })
 
     .put(function (req, res){
-      let project = req.params.project;
-      const {issue_title, issue_text, created_on, updated_on, created_by, assigned_to, open, status_text,_id} = req.body;
+      let {
+        issue_title,
+        issue_text,
+        created_by,
+        assigned_to,
+        status_text
+      } = req.body;
 
-      Issue.findByIdAndUpdate(_id, {
+      let open = !req.body.open
+
+      let id = req.body._id;
+
+      if (!id) {
+        return res.send({error: 'missing _id'});
+      } else if (!issue_title && !issue_text && !created_by && !assigned_to && !status_text) {
+        return res.send({error: 'no update fields(s) sent', '_id': id});
+      }
+
+      Issue.findByIdAndUpdate(id, {
         issue_title:issue_title,
         issue_text:issue_text,
-        created_on:created_on,
-        updated_on:updated_on,
         created_by:created_by,
         assigned_to:assigned_to,
+        status_text: status_text,
         open: open,
-        status_text: status_text
+
+        updated_on: Date(),
       },{
-        new: true,
-        overwrite: false
+        overwrite: true,
+        new: true
       } , (err, data) => {
-        console.log(data)
-        res.json(data);
+        if (err) return res.send({ error: 'could not update', '_id': id });
+        console.log('put request', data);
+        res.send({result: 'successfully updated', _id: id});
       });
     })
 
