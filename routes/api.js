@@ -1,18 +1,22 @@
 'use strict';
 const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
 
 module.exports = function (app) {
 
   mongoose.connect('mongodb://localhost:27017/test');
   const issueSchema = new mongoose.Schema({
+     "project": String,
+
      "issue_title": {type: String, required: true},
      "issue_text": {type: String, required: true},
-     "created_on": Date,
-     "updated_on": Date,
      "created_by": {type: String, required: true},
      "assigned_to": String,
-     "open": Boolean,
      "status_text": String,
+
+     "created_on": Date,
+     "updated_on": Date,
+     "open": Boolean,
   });
 
   const Issue = mongoose.model('Issue', issueSchema);
@@ -20,30 +24,54 @@ module.exports = function (app) {
   app.route('/api/issues/:project')
 
     .get(function (req, res){
-      let project = req.params.project;
-      let {open} = req.query;
-      Issue.find({}, (err, data) => {
+
+      let query = req.query;
+      query.project = req.params.project;
+
+      console.log('get request - querys ', query);
+
+      Issue.find(query, (err, data) => {
+        console.log('get request - query found ', data);
         res.json(data);
       })
     })
 
-    .post(function (req, res){
+    .post((req, res) => {
       let project = req.params.project;
-      const {issue_title, issue_text, created_on, updated_on, created_by, assigned_to, open, status_text} = req.body;
-      Issue.create({
+
+      let {
         issue_title,
         issue_text,
-        created_on,
-        updated_on,
         created_by,
         assigned_to,
-        open,
-        status_text
+        status_text,
+      } = req.body;
+
+      let actualDate = Date();
+
+      if (!assigned_to) { assigned_to = ''; }
+      if (!status_text) { status_text = ''; }
+
+      console.log('post request - input data', req.body);
+
+      Issue.create({
+        project,
+
+        issue_title,
+        issue_text,
+        created_by,
+        assigned_to,
+        status_text,
+
+        created_on: actualDate,
+        updated_on: actualDate,
+        open: true,
       }, (err, data) => {
-        if (err) return console.error(err._message);
-        console.log(req.body)
+        if (err) res.send({ error: 'required field(s) missing' });
+        console.log('post request - data created', data);
         res.json(data);
       });
+
     })
 
     .put(function (req, res){
@@ -70,19 +98,27 @@ module.exports = function (app) {
 
     .delete(function (req, res){
       let project = req.params.project;
-      let { _id } = req.body;
-      console.log(_id);
-/*
-      Issue.deleteMany({}, (err, data) => {
-        if (err) return console.log(err);
-        console.log(data);
-      });
+      let id = req.body._id;
 
-      */
-      Issue.deleteOne({_id:_id}, (err, data) => {
-        if (err) return console.error(err);
-        console.log(data);
-      });
+      if (!id) {
+        console.log('delete request - missing id', id);
+        return res.send({error: 'missing _id'});
+      }
 
+      Issue.deleteOne({_id: id}, (err, data) => {
+
+        if (!data || !data.deletedCount) {
+          console.log('delete request - error', data, id);
+          return res.send({error: 'could not delete', '_id': id });
+        }
+
+        console.log('delete request - deleted', err, data.deletedCount, id);
+        return res.send({result: 'successfully deleted', '_id': id });
+
+      // Issue.deleteMany({}, (err, data) => {
+      //   if (err) return console.log(err);
+      //   console.log(data);
+      // });
     });
+  });
 };
