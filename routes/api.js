@@ -83,33 +83,51 @@ module.exports = function (app) {
         status_text
       } = req.body;
 
-      let open = !req.body.open
-
+      let open = !req.body.open;
       let id = req.body._id;
 
       if (!id) {
+        console.log('put request - missing _id', {id, issue_title, issue_text, created_by, assigned_to, status_text});
         return res.send({error: 'missing _id'});
-      } else if (!issue_title && !issue_text && !created_by && !assigned_to && !status_text) {
-        return res.send({error: 'no update fields(s) sent', '_id': id});
       }
 
-      Issue.findByIdAndUpdate(id, {
-        issue_title:issue_title,
-        issue_text:issue_text,
-        created_by:created_by,
-        assigned_to:assigned_to,
-        status_text: status_text,
-        open: open,
 
-        updated_on: Date(),
-      },{
-        overwrite: true,
-        new: true
-      } , (err, data) => {
-        if (err) return res.send({ error: 'could not update', '_id': id });
-        console.log('put request', data);
-        res.send({result: 'successfully updated', _id: id});
-      });
+        Issue.findByIdAndUpdate(id, {
+          issue_title:issue_title,
+          issue_text:issue_text,
+          created_by:created_by,
+          assigned_to:assigned_to,
+          status_text: status_text,
+          open: open,
+          updated_on: Date(),
+        }, {
+          overwrite: true,
+          new: true,
+          upsert: false
+        }, (err, data) => {
+          if(err || !data) {
+
+
+            console.log('put request - could not update', {id, issue_title, issue_text, created_by, assigned_to, status_text});
+            return res.send({ error: 'could not update', '_id': id });
+
+
+          }
+
+          if (data._id == id) {
+            if (!issue_title && !issue_text && !created_by && !assigned_to && !status_text) {
+              console.log('put request - no update field(s) sent', {id, issue_title, issue_text, created_by, assigned_to, status_text});
+              return res.send({error: 'no update field(s) sent', '_id': id});
+            }
+
+            console.log('put request - successfully updated', data, {id, issue_title, issue_text, created_by, assigned_to, status_text});
+            return res.send({result: 'successfully updated', _id: id});
+          }
+
+        });
+
+
+
     })
 
     .delete(function (req, res){
