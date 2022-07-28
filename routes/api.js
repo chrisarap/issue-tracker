@@ -28,10 +28,10 @@ module.exports = function (app) {
       let query = req.query;
       query.project = req.params.project;
 
-      console.log('get request - querys ', query);
+      //console.log('get request - querys ', query);
 
       Issue.find(query, (err, data) => {
-        console.log('get request - query found ', data);
+        //console.log('get request - query found ', data);
         res.json(data);
       })
     })
@@ -52,7 +52,7 @@ module.exports = function (app) {
       if (!assigned_to) { assigned_to = ''; }
       if (!status_text) { status_text = ''; }
 
-      console.log('post request - input data', req.body);
+      //console.log('post request - input data', req.body);
 
       Issue.create({
         project,
@@ -68,13 +68,77 @@ module.exports = function (app) {
         open: true,
       }, (err, data) => {
         if (err) res.send({ error: 'required field(s) missing' });
-        console.log('post request - data created', data);
+        //console.log('post request - data created', data);
         res.json(data);
       });
 
     })
 
     .put(function (req, res){
+
+      // get only variables with text (true variables)
+      let putVariables = {};
+
+      for (let key in req.body) {
+        if (req.body[key]) {
+          Object.assign(putVariables, {[key]: req.body[key]});
+        }
+      }
+
+      let myID = req.body._id;
+      delete req.body._id;
+      let open2 = !req.body.open;
+      putVariables.open = open2;
+      console.log(myID, putVariables);
+
+      /*
+
+      let myId = putVariables._id;
+      delete putVariables._id;
+
+      if (Object.entries(putVariables).length == 0) {
+        console.log('put request ', 'no update field(s) sent', putVariables);
+        return res.send({error: 'no update field(s) sent', data: putVariables});
+      }
+
+
+
+      if (!putVariables._id) {
+        console.log('put request ', 'missing id', putVariables);
+        return res.send({error: 'missing _id'});
+      }
+
+      putVariables.updated_on = Date();
+      putVariables.open = !putVariables.open;
+
+
+      Issue.findById(putVariables._id, (err, data) => {
+        if (err) {
+          console.log('put request ', 'could not update', data);
+          return res.send({error: 'could not update', _id: putVariables._id });
+        } else {
+          Issue.findByIdAndUpdate(
+            putVariables._id,
+            putVariables,
+            {
+              overwrite: false,
+              new: true,
+              upsert: false
+            }, (err, newData) => {
+              if (err) {
+                console.log('put request ', 'could not update 2');
+                return res.send({error: 'could not update', _id: putVariables._id });
+              }
+
+              console.log('put request ', 'successfully updated', data, newData);
+              return res.send({result: 'successfully updated', _id: putVariables._id});
+            }
+          );
+        }
+      });
+
+
+      /*
       let {
         issue_title,
         issue_text,
@@ -127,26 +191,26 @@ module.exports = function (app) {
         });
 
 
-
-    })
+*/
+})
 
     .delete(function (req, res){
       let project = req.params.project;
       let id = req.body._id;
 
       if (!id) {
-        console.log('delete request - missing id', id);
+        //console.log('delete request - missing id', id);
         return res.send({error: 'missing _id'});
       }
 
       Issue.deleteOne({_id: id}, (err, data) => {
 
         if (!data || !data.deletedCount) {
-          console.log('delete request - error', data, id);
+          //console.log('delete request - error', data, id);
           return res.send({error: 'could not delete', '_id': id });
         }
 
-        console.log('delete request - deleted', err, data.deletedCount, id);
+        //console.log('delete request - deleted', err, data.deletedCount, id);
         return res.send({result: 'successfully deleted', '_id': id });
 
       // Issue.deleteMany({}, (err, data) => {

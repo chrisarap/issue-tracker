@@ -143,7 +143,7 @@ suite('Functional Tests', () => {
     chai
       .request(server)
       .put('/api/issues/apitest')
-      .send({})
+      .send({issue_title: 'test put title'})
       .end((err, res) => {
         assert.equal(res.status, 200);
         assert.equal(res.body.error, 'missing _id');
@@ -155,8 +155,9 @@ suite('Functional Tests', () => {
     chai
       .request(server)
       .put('/api/issues/apitest')
-      .send({_id: testID})
+      .send({})
       .end((err, res) => {
+        console.log('heywawdsa', res.body);
         assert.equal(res.status, 200);
         assert.equal(res.body.error, 'no update field(s) sent');
       });
@@ -169,6 +170,7 @@ suite('Functional Tests', () => {
       .put('/api/issues/apitest')
       .send({_id: 'heyimtestingthis', issue_title: 'test put title'})
       .end((err, res) => {
+        console.log(res.body, 'hey');
         assert.equal(res.status, 200);
         assert.equal(res.body.error, 'could not update');
       });
